@@ -196,7 +196,7 @@ public class Controller {
             }
         } catch (HibernateException e) {
             e.printStackTrace();
-        } finally {
+        }  finally {
             HibernateUtil.close();
         }
 

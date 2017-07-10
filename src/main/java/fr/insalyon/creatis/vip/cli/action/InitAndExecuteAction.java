@@ -6,7 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static java.lang.System.exit;
+
 import fr.insalyon.creatis.vip.cli.control.Arguments;
+import fr.insalyon.creatis.vip.cli.model.ArgumentException;
 import fr.insalyon.creatis.vip.java_client.ApiException;
 import fr.insalyon.creatis.vip.java_client.api.DefaultApi;
 import fr.insalyon.creatis.vip.java_client.model.Execution;
@@ -20,13 +22,13 @@ public class InitAndExecuteAction implements Action<Execution> {
 	private Arguments args;
 	private String directoryOnVip;
 
-	public InitAndExecuteAction(DefaultApi api, Arguments args) {
+	public InitAndExecuteAction(DefaultApi api, Arguments args)  {
 		this.api = api;
 		this.args = args;
 		setExecution();
 	}
 	
-	private void setExecution(){
+	private void setExecution()  {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!args.getOptions().contains("nodir")) {
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd_HHmmss");
@@ -39,14 +41,21 @@ public class InitAndExecuteAction implements Action<Execution> {
 
 		}
 		execution=new Execution();
-		execution.setName("vip-cli");
-		try {
-			execution.setPipelineIdentifier(args.getArgsWithoutFlag().get(0));
-		} catch (IndexOutOfBoundsException e) {
-			System.err.println("Pipeline identifier not indicated.");
+		String executionName=args.getArgsWithFlag().get("name");
+		if (executionName==null) {
+			System.err.println("Execution Name not indicated");
 			exit(0);
+		} else {
+			System.out.println(executionName);
+			execution.setName(executionName);
+			try {
+				execution.setPipelineIdentifier(args.getArgsWithoutFlag().get(0));
+			} catch (IndexOutOfBoundsException e) {
+				System.err.println("Pipeline identifier not indicated.");
+				exit(0);
+			}
+			execution.setInputValues(parameters);
 		}
-		execution.setInputValues(parameters);
 	}
 
 	public String getDirectoryOnVip(){
