@@ -59,11 +59,11 @@ public class UtilIO {
 
     }
 
-    public static void printExecuteResult(Execution execution, String directoryOnVip) {
+    public static void printExecuteResult(Execution execution) {
 
-
+        System.out.println("name: "+execution.getName());
         System.out.println("identifier: " + execution.getIdentifier());
-        System.out.println("directory: " + directoryOnVip);
+        //System.out.println("directory: " + directoryOnVip);
 
 
     }

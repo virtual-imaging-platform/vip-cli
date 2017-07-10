@@ -36,17 +36,17 @@ public class InitAndExecuteAction implements Action<Execution> {
 			parameters.put("results-directory", directoryOnVip);
 		}
 		for (Map.Entry<String,String> entry : args.getArgsWithFlag().entrySet()) {
-			if (entry.getKey()!="results")
+			if (!entry.getKey().equals("results")&&!entry.getKey().equals("name")) {
 				parameters.put(entry.getKey(), entry.getValue());
-
+			}
 		}
 		execution=new Execution();
+
 		String executionName=args.getArgsWithFlag().get("name");
 		if (executionName==null) {
 			System.err.println("Execution Name not indicated");
 			exit(0);
 		} else {
-			System.out.println(executionName);
 			execution.setName(executionName);
 			try {
 				execution.setPipelineIdentifier(args.getArgsWithoutFlag().get(0));

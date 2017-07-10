@@ -93,7 +93,7 @@ public class Controller {
                             Execution execution = null;
                             try {
                                 execution = initAndExecuteAction.execute();
-                                UtilIO.printExecuteResult(execution, initAndExecuteAction.getDirectoryOnVip());
+                                UtilIO.printExecuteResult(execution);
                                 InfoExecution infoExecution = new InfoExecution(execution.getIdentifier(), execution.getPipelineIdentifier(),
                                         execution.getStatus().toString(), initAndExecuteAction.getDirectoryOnVip(), new Date(execution.getStartDate()));
                                 infoDAO.persist(infoExecution);

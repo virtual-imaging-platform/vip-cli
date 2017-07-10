@@ -48,7 +48,7 @@ public class DoAllAction implements Action<List<String>> {
     public List<String> execute() throws ApiException {
         InitAndExecuteAction initAndExecuteAction = new InitAndExecuteAction(api,args);
         Execution execution=initAndExecuteAction.execute();
-        UtilIO.printExecuteResult(execution,initAndExecuteAction.getDirectoryOnVip());
+        UtilIO.printExecuteResult(execution);
         infoDao.persist(new InfoExecution(execution.getIdentifier(),execution.getPipelineIdentifier(), execution.getStatus().toString(), initAndExecuteAction.getDirectoryOnVip(), new Date(execution.getStartDate())));
         while (execution.getStatus()!= Execution.StatusEnum.FINISHED) {
             if (execution.getStatus()== Execution.StatusEnum.KILLED) {
