@@ -7,9 +7,10 @@ import javax.persistence.*;
 
 @Entity
 @Table(name = "InfoExecution")
+
 public class InfoExecution implements Serializable {
 	/**
-	 * 
+	 * Entity class for local database
 	 */
 	private static final long serialVersionUID = 1L;
 	@Id

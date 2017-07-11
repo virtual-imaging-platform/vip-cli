@@ -8,6 +8,11 @@ import fr.insalyon.creatis.vip.java_client.model.Execution;
 
 import java.util.List;
 
+/**
+ * get the information of a specified execution from VIP
+ * if no execution identifier indicated, the last execution in the local database will be used by default
+ */
+
 public class GetExecutionAction implements Action<Execution> {
 	private String executionId;
 	private Arguments args;

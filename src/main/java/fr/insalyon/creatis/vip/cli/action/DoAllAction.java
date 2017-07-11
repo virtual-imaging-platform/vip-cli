@@ -21,7 +21,9 @@ import static java.lang.System.exit;
  * Created by qifan on 2017/6/26.
  */
 
-
+/**
+ * Action which test the status of the execution and download the result when its ready
+ */
 
 public class DoAllAction implements Action<List<String>> {
     public final static String DOWNLOADBASEPATH= Controller.base+ "/path/content?uri=vip://vip.creatis.insa-lyon.fr/vip/Home";
@@ -46,10 +48,13 @@ public class DoAllAction implements Action<List<String>> {
 
     @Override
     public List<String> execute() throws ApiException {
+        //init execution
         InitAndExecuteAction initAndExecuteAction = new InitAndExecuteAction(api,args);
         Execution execution=initAndExecuteAction.execute();
         UtilIO.printExecuteResult(execution);
+        //persist in the local database
         infoDao.persist(new InfoExecution(execution.getIdentifier(),execution.getPipelineIdentifier(), execution.getStatus().toString(), initAndExecuteAction.getDirectoryOnVip(), new Date(execution.getStartDate())));
+        //test the status of execution
         while (execution.getStatus()!= Execution.StatusEnum.FINISHED) {
             if (execution.getStatus()== Execution.StatusEnum.KILLED) {
                 System.out.println("Killed");
@@ -65,6 +70,7 @@ public class DoAllAction implements Action<List<String>> {
             infoDao.upadteStatusByExecutionId(execution.getIdentifier(),execution.getStatus().toString());
 
         }
+        //download the returned file
         Map<String, List<String>> returnedFiles = api.getExecution(execution.getIdentifier()).getReturnedFiles();
         List<String> urls = returnedFiles.get("output_file");
         List<String> usableUrls = new ArrayList<>();

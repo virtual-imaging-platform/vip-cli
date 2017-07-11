@@ -11,6 +11,10 @@ import java.util.List;
 /**
  * Created by qifan on 2017/7/4.
  */
+
+/**
+ * get the status of the last ten executions from VIP platform
+ */
 public class Get10LastExecutions implements Action<List<Execution>> {
     private DefaultApi api;
 

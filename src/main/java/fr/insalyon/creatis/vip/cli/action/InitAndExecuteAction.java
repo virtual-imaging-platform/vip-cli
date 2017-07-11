@@ -15,6 +15,10 @@ import fr.insalyon.creatis.vip.java_client.model.Execution;
 import fr.insalyon.creatis.vip.java_client.model.Pipeline;
 import fr.insalyon.creatis.vip.java_client.model.PipelineParameter;
 
+
+/**
+ * init and execute an execution
+ */
 public class InitAndExecuteAction implements Action<Execution> {
 
 	private Execution execution;
@@ -27,7 +31,9 @@ public class InitAndExecuteAction implements Action<Execution> {
 		this.args = args;
 		setExecution();
 	}
-	
+
+	//set the directory on VIP platform to put the result
+	//if no directory is needed  (ex. GateLab execution), -nodir option is necessary.
 	private void setExecution()  {
 		Map<String, Object> parameters = new HashMap<>();
 		if (!args.getOptions().contains("nodir")) {

@@ -11,6 +11,9 @@ import fr.insalyon.creatis.vip.java_client.api.DefaultApi;
 
 import static java.lang.System.exit;
 
+/**
+ * action to download the result of execution
+ */
 public class GetResultAction implements Action<List<String>> {
 
     private String executionId;
@@ -27,6 +30,8 @@ public class GetResultAction implements Action<List<String>> {
         setDirectory();
     }
 
+    //set where to put the result
+    //result directory is necessary for this action
     private void setDirectory() {
         if (args.getArgsWithoutFlag().size()>=1) {
             directory=args.getArgsWithoutFlag().get(args.getArgsWithoutFlag().size()-1);
@@ -57,12 +62,16 @@ public class GetResultAction implements Action<List<String>> {
         for (String key : returnedFiles.keySet()) {
             System.out.println(key + ":" + returnedFiles.get(key));
         }
+
+        //if the execution is gate, a -gate option is needed
         if (args.getOptions().contains("gate")) {
             urls=returnedFiles.get("merged_result");
 
         } else {
              urls = returnedFiles.get("output_file");
         }
+
+        //transform the urls of the file to a downloadable api request path
         List<String> usableUrls = new ArrayList<>();
         String base = api.getApiClient().getBasePath() + "/path/content?uri=vip://vip.creatis.insa-lyon.fr/vip/Home";
         for (String url : urls) {

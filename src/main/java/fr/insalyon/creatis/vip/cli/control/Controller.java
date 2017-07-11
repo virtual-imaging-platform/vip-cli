@@ -22,6 +22,7 @@ import org.hibernate.HibernateException;
 import javax.net.ssl.X509TrustManager;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
@@ -40,11 +41,15 @@ public class Controller {
     public static String base;
     public static String databasePosition;
     public static int refreshTime;
-    public final static String TRUSTSTOREFILE= "./jssecacerts";
+    public final static String TRUSTSTOREFILE= "./truststore";
     public static void main(String args[]) {
+
+        //set truststore
         System.setProperty("javax.net.ssl.keyStore", TRUSTSTOREFILE);
         System.setProperty("javax.net.ssl.trustStore", TRUSTSTOREFILE);
-        System.setProperty("javax.net.ssl.keyStorePassword", "changeit");
+        System.setProperty("javax.net.ssl.keyStorePassword", "creatis");
+
+        //parse argument
         Arguments arguments = null;
         try {
             arguments = new Arguments(args);
@@ -53,7 +58,7 @@ public class Controller {
             System.err.println(e.getMessage());
             exit(0);
         }
-
+        //read from properties
         PropertyCli property = null;
         DefaultApi api = null;
         try {
@@ -73,7 +78,7 @@ public class Controller {
             exit(0);
         }
 
-
+        //set hibernate
         java.util.logging.Logger.getLogger("org.hibernate").setLevel(Level.OFF);
         InfoExecutionDAO infoDAO = new InfoExecutionDAO();
 
