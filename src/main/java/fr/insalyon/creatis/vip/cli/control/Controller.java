@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
 
+import static fr.insalyon.creatis.vip.cli.control.ArgType.RELAUNCH;
 import static fr.insalyon.creatis.vip.cli.control.ArgType.SETAPIKEY;
 import static java.lang.System.exit;
 
@@ -188,6 +189,13 @@ public class Controller {
                         SetApiKeyAction setApiKeyAction = new SetApiKeyAction(arguments);
                         setApiKeyAction.execute();
                         break;
+                    case RELAUNCH:
+                        RelaunchAction relaunchAction=new RelaunchAction(api,arguments);
+                        try {
+                            relaunchAction.execute();
+                        } catch (ApiException e) {
+                            System.err.println(e.getMessage());
+                        }
 
                 }
 

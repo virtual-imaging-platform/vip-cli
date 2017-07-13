@@ -52,6 +52,9 @@ public class Arguments {
             case "getapikey":
                 action=GETAPIKEY;
                 break;
+            case "relaunch":
+                action=RELAUNCH;
+                break;
             default:
                 throw new ArgumentException("Option not correct.");
         }

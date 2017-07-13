@@ -85,7 +85,7 @@ public class UtilIO {
     public static void printListExecutions (List<Execution> executionList) {
         SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         for (Execution e:executionList) {
-            System.out.println (e.getName()+","+e.getPipelineIdentifier()+","+df.format(new Date(e.getStartDate()))+","+e.getStatus());
+            System.out.println (e.getName()+","+e.getPipelineIdentifier()+","+df.format(new Date(e.getStartDate()))+","+e.getStatus()+","+e.getIdentifier());
         }
     }
 
@@ -136,7 +136,7 @@ public class UtilIO {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.toString());
         }
 
     }
