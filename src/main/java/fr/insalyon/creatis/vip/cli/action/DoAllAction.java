@@ -3,14 +3,12 @@ package fr.insalyon.creatis.vip.cli.action;
 import fr.insalyon.creatis.vip.cli.control.Arguments;
 import fr.insalyon.creatis.vip.cli.control.Controller;
 import fr.insalyon.creatis.vip.cli.dao.InfoExecutionDAO;
-import fr.insalyon.creatis.vip.cli.model.InfoExecution;
-import fr.insalyon.creatis.vip.cli.vue.UtilIO;
+import fr.insalyon.creatis.vip.cli.model.CliEventListener;
 import fr.insalyon.creatis.vip.java_client.ApiException;
 import fr.insalyon.creatis.vip.java_client.api.DefaultApi;
 import fr.insalyon.creatis.vip.java_client.model.Execution;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -26,16 +24,17 @@ import static java.lang.System.exit;
  */
 
 public class DoAllAction implements Action<List<String>> {
-    public final static String DOWNLOADBASEPATH= Controller.base+ "/path/content?uri=vip://vip.creatis.insa-lyon.fr/vip/Home";
+    public final static String DOWNLOADBASEPATH= Controller.vipUriPrefix + "/path/content?uri=vip://vip.creatis.insa-lyon.fr/vip/Home";
     private DefaultApi api;
     private Arguments args;
     private String directory;
-    InfoExecutionDAO infoDao;
+    private CliEventListener cliEventListenerWithStorage;
 
-    public DoAllAction (DefaultApi api,Arguments args) {
-        this.api=api;
-        this.args=args;
-        infoDao=new InfoExecutionDAO();
+
+    public DoAllAction (Controller.CliContext cliContext) {
+        this.api=cliContext.api;
+        this.args=cliContext.arguments;
+        cliEventListenerWithStorage=cliContext.getListenerWithStorage();
         this.directory=args.getArgsWithFlag().get("results");
         args.getArgsWithFlag().remove("results");
     }
@@ -51,10 +50,10 @@ public class DoAllAction implements Action<List<String>> {
         //init execution
         InitAndExecuteAction initAndExecuteAction = new InitAndExecuteAction(api,args);
         Execution execution=initAndExecuteAction.execute();
-        UtilIO.printExecuteResult(execution);
+
         //persist in the local database
-        infoDao.persist(new InfoExecution(execution.getIdentifier(),execution.getPipelineIdentifier(), execution.getStatus().toString(), initAndExecuteAction.getDirectoryOnVip(), new Date(execution.getStartDate())));
-        //test the status of execution
+
+        // test the status of execution
         while (execution.getStatus()!= Execution.StatusEnum.FINISHED) {
             if (execution.getStatus()== Execution.StatusEnum.KILLED) {
                 System.out.println("Killed");
@@ -66,8 +65,8 @@ public class DoAllAction implements Action<List<String>> {
                 e.printStackTrace();
             }
             execution=api.getExecution(execution.getIdentifier());
-            UtilIO.printExecutionStatus(execution);
-            infoDao.upadteStatusByExecutionId(execution.getIdentifier(),execution.getStatus().toString());
+
+            //infoDao.upadteStatusByExecutionId(execution.getIdentifier(),execution.getStatus().toString());
 
         }
         //download the returned file

@@ -9,7 +9,6 @@ import fr.insalyon.creatis.vip.cli.control.Arguments;
 import fr.insalyon.creatis.vip.java_client.ApiException;
 import fr.insalyon.creatis.vip.java_client.api.DefaultApi;
 import fr.insalyon.creatis.vip.java_client.model.Pipeline;
-import java.util.List;
 
 /**
  *

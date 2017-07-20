@@ -25,14 +25,12 @@ public class SetApiKeyAction {
             is.close();
             FileOutputStream fos=new FileOutputStream(PROPERTIESPATH);
             prop.setProperty("APIKEY",apiKey);
-            System.out.println(prop.getProperty("APIKEY"));;
+            System.out.println(prop.getProperty("APIKEY"));
             prop.store(fos,"Properties");
             fos.close();
         } catch (IndexOutOfBoundsException e) {
             System.err.println("Api key value not indicated.");
             exit(0);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

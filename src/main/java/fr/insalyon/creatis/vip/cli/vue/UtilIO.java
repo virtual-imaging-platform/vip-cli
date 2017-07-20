@@ -5,30 +5,38 @@ import static java.lang.System.exit;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import fr.insalyon.creatis.vip.cli.control.Controller;
 import fr.insalyon.creatis.vip.cli.model.InfoExecution;
+import fr.insalyon.creatis.vip.cli.model.InfoExecutionTransform;
 import fr.insalyon.creatis.vip.cli.model.PropertyCli;
 import fr.insalyon.creatis.vip.cli.model.PropertyException;
 import fr.insalyon.creatis.vip.java_client.model.Execution;
-import fr.insalyon.creatis.vip.java_client.model.Pipeline;
-import fr.insalyon.creatis.vip.java_client.model.PlatformProperties;
 
 public class UtilIO {
     private final static String FLAGAPIKEY = "APIKEY";
     private final static String FLAGDATABASE = "DATABASE";
     private final static String FLAGBASEPATH = "BASEPATH";
     private final static String FLAGREFRESHTIME = "REFRESHTIME";
+    private final static String FLAGENABLEDATABASE = "ENABLEDATABASE";
 
 
-    public static PropertyCli GetPropertyCli(File propertyFile) throws PropertyException {
-        try {
-            InputStream is = new FileInputStream(propertyFile);
+    private static UtilIO instance;
+
+    public static UtilIO getInstance() {
+        if (instance == null) {
+            instance = new UtilIO();
+        }
+        return instance;
+    }
+
+    private UtilIO() {
+    }
+
+    public PropertyCli getPropertyCli(File propertyFile) throws PropertyException {
+        try (InputStream is = new FileInputStream(propertyFile)) {
+
             Properties prop = new Properties();
             prop.load(is);
             //TODO:properties elements not found exception
@@ -36,17 +44,21 @@ public class UtilIO {
             String database = (String) prop.get(FLAGDATABASE);
             String basepath = (String) prop.get(FLAGBASEPATH);
             String refreshTime = (String) prop.get(FLAGREFRESHTIME);
-            is.close();
-            if (database==null) {
+            String enableDatabase = (String) prop.get(FLAGENABLEDATABASE);
+            if (database == null) {
                 throw new PropertyException("Database property not found");
             }
-            if (basepath==null) {
+            if (basepath == null) {
                 throw new PropertyException("Base Path property not found");
             }
-            if (refreshTime==null) {
+            if (refreshTime == null) {
                 throw new PropertyException("refresh time property not found");
             }
-            return new PropertyCli(apikey, database, basepath, refreshTime);
+
+            if (enableDatabase == null) {
+                throw new PropertyException("enable database property not found");
+            }
+            return new PropertyCli(apikey, database, basepath, refreshTime, enableDatabase);
 
 
         } catch (IOException ex) {
@@ -59,16 +71,13 @@ public class UtilIO {
 
     }
 
-    public static void printExecuteResult(Execution execution) {
-
-        System.out.println("name: "+execution.getName());
-        System.out.println("identifier: " + execution.getIdentifier());
-        //System.out.println("directory: " + directoryOnVip);
-
-
+    public void printInitExecuteResult(Execution execution) {
+        System.out.println("Execution name: " + execution.getName());
+        System.out.println("Execution identifier: " + execution.getIdentifier());
+        //TODO: see if we print result-directory (gate problem doesnt exist for gate)
     }
 
-    public static void printExecutionStatus(Execution execution) {
+    public void printExecutionStatus(Execution execution) {
 
 
         System.out.println(execution.getStatus());
@@ -76,41 +85,55 @@ public class UtilIO {
 
     }
 
-    public static void printListInfoExecutions(List<InfoExecution> listExecution) {
-        for (InfoExecution info : listExecution) {
-            System.out.println(info);
+    /**
+     * used to print local database information
+     *
+     * @param listExecution
+     */
+    public void printListInfoExecutions(List<InfoExecution> listExecution, boolean formatted) {
+        if (formatted) {
+            if (listExecution != null) {
+                StringBuilder toPrint = new StringBuilder();
+                // TODO : check new line character on windows
+                for (InfoExecution e : listExecution) {
+                    toPrint.append(e.getExecutionName()).append(",")
+                            .append(e.getPipelineIdentifier()).append(",")
+                            .append(e.getStartdate()).append(",")
+                            .append(e.getStatus()).append(",")
+                            .append(e.getExecutionIdentifier()).append("&&&");
+                }
+                System.out.print(toPrint.toString());
+            }
+        } else {
+            if (listExecution != null) {
+                StringBuilder toPrint = new StringBuilder();
+                // TODO : check new line character on windows
+                Collections.reverse(listExecution);
+                for (InfoExecution e : listExecution) {
+                    toPrint.append("Execution Name:   " + e.getExecutionName()).append(System.lineSeparator())
+                            .append("Pipeline id:      " + e.getPipelineIdentifier()).append(System.lineSeparator())
+                            .append("Start date:       " + e.getStartdate()).append(System.lineSeparator())
+                            .append("Status:           " + e.getStatus()).append(System.lineSeparator())
+                            .append("Execution id:     " + e.getExecutionIdentifier()).append(System.lineSeparator())
+                            .append("-------------------").append(System.lineSeparator());
+                }
+                System.out.print(toPrint.toString());
+            }
         }
 
     }
-    public static void printListExecutions (List<Execution> executionList) {
-        SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        for (Execution e:executionList) {
-            System.out.println (e.getName()+","+e.getPipelineIdentifier()+","+df.format(new Date(e.getStartDate()))+","+e.getStatus()+","+e.getIdentifier());
-        }
+
+    public void printListExecutions(List<Execution> executionList, boolean formatted) {
+        printListInfoExecutions(InfoExecutionTransform.executionListToInfoList(executionList), formatted);
     }
 
-    public static void printPlatformProperties(PlatformProperties platformproperty) {
-        System.out.println("Platform name: " + platformproperty.getPlatformName());
-        System.out.println("Platform description: " + platformproperty.getPlatformDescription());
-        System.out.println("Api version supported: " + platformproperty.getSupportedAPIVersion());
-        System.out.println("Contact email: " + platformproperty.getEmail());
-    }
 
-    public static void printPipelinesList(List<Pipeline> pipelinesList) {
-        for (Pipeline pipeline : pipelinesList) {
-
-            System.out.println("Name: " + pipeline.getName());
-            System.out.println("Version: " + pipeline.getVersion());
-            System.out.println("Can execute: " + pipeline.getCanExecute() + "\r\n");
-        }
-    }
-
-    public static void downloadFile(List<String> urls, String dest) {
+    public void downloadFile(List<String> urls, String dest) {
 
         try {
             for (String url : urls) {
                 URL fileUrl = new URL(url);
-                System.out.println(url);
+                // System.out.println(url);
                 HttpURLConnection httpConnection = (HttpURLConnection) fileUrl.openConnection();
                 httpConnection.setRequestMethod("GET");
                 httpConnection.setRequestProperty("apiKey", Controller.apiKeyValue);
@@ -118,9 +141,9 @@ public class UtilIO {
 
                 InputStream decodedInputStream = Base64.getDecoder().wrap(inputStream);
                 File file = new File(dest + url.substring(url.lastIndexOf('/')));
+                System.out.println(dest + url.substring(url.lastIndexOf('/')));
                 file.createNewFile();
-                OutputStream outputStream =
-                        new FileOutputStream(file);
+                OutputStream outputStream = new FileOutputStream(file);
 
                 int read = 0;
                 byte[] bytes = new byte[1024];
@@ -140,4 +163,22 @@ public class UtilIO {
         }
 
     }
+
+    public void printGateInputs(Map<String, Object> inputs) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(inputs.get("CPUestimation")).append("&&&")
+                .append(inputs.get("GateInput")).append("&&&")
+                .append(inputs.get("GateRelease")).append("&&&")
+                .append(inputs.get("NumberOfParticles")).append("&&&")
+                .append(inputs.get("ParallelizationType"));
+        System.out.println(sb.toString());
+        /**
+         System.out.print(inputs.get("CPUestimation")+"&&&");
+         System.out.print(inputs.get("GateInput")+"&&&");
+         System.out.print(inputs.get("GateRelease")+"&&&");
+         System.out.print(inputs.get("NumberOfParticles")+"&&&");
+         System.out.print(inputs.get("ParallelizationType"));
+         **/
+    }
+
 }

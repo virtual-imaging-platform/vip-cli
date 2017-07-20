@@ -6,9 +6,11 @@ import java.util.Map;
 import fr.insalyon.creatis.vip.cli.control.Arguments;
 import fr.insalyon.creatis.vip.cli.control.Controller;
 import fr.insalyon.creatis.vip.cli.dao.InfoExecutionDAO;
+import fr.insalyon.creatis.vip.cli.model.CliEventListener;
 import fr.insalyon.creatis.vip.java_client.ApiException;
 import fr.insalyon.creatis.vip.java_client.api.DefaultApi;
 
+import static fr.insalyon.creatis.vip.cli.control.Controller.enableDatabase;
 import static java.lang.System.exit;
 
 /**
@@ -20,12 +22,13 @@ public class GetResultAction implements Action<List<String>> {
     private String directory;
     private Arguments args;
     private DefaultApi api;
+    private CliEventListener cliEventListenerWithStorage;
 
 
-    public GetResultAction(DefaultApi api, Arguments args) {
-        this.args = args;
-        this.api = api;
-
+    public GetResultAction(Controller.CliContext cliContext) {
+        this.args =cliContext.arguments;
+        this.api = cliContext.api;
+        this.cliEventListenerWithStorage=cliContext.getListenerWithStorage();
         setExecutionId();
         setDirectory();
     }
@@ -45,8 +48,13 @@ public class GetResultAction implements Action<List<String>> {
         if (args.getArgsWithoutFlag().size()>=2) {
             executionId = args.getArgsWithoutFlag().get(0);
         } else if (args.getArgsWithoutFlag().size()==1){
-            InfoExecutionDAO infoDao = new InfoExecutionDAO();
-            executionId = infoDao.getLastExecution().getExecutionIdentifier();
+            if (cliEventListenerWithStorage!=null) {
+
+                executionId = cliEventListenerWithStorage.getLastLocalExecution().getExecutionIdentifier();
+            } else {
+                System.err.println("please enter execution identifier");
+                exit(0);
+            }
         }
     }
 
@@ -59,12 +67,12 @@ public class GetResultAction implements Action<List<String>> {
         Map<String, List<String>> returnedFiles = api.getExecution(executionId).getReturnedFiles();
         //TODO:check urls not null
         List<String> urls=null;
-        for (String key : returnedFiles.keySet()) {
-            System.out.println(key + ":" + returnedFiles.get(key));
-        }
+       // for (String key : returnedFiles.keySet()) {
+          //  System.out.println(key + ":" + returnedFiles.get(key));
+        //}
 
         //if the execution is gate, a -gate option is needed
-        if (args.getOptions().contains("gate")) {
+        if (args.hasOption("gate")) {
             urls=returnedFiles.get("merged_result");
 
         } else {
@@ -77,7 +85,7 @@ public class GetResultAction implements Action<List<String>> {
         for (String url : urls) {
             int pos = url.indexOf('/', "/vip/Users//".length());
             usableUrls.add(base + url.substring(pos));
-            System.out.println(base + url.substring(pos));
+            //System.out.println(base + url.substring(pos));
         }
         return usableUrls;
     }

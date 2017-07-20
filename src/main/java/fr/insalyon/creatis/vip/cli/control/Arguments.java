@@ -20,7 +20,7 @@ public class Arguments {
 
         argsWithFlag = new HashMap<>();
         argsWithoutFlag = new ArrayList<>();
-        options=new HashSet<>();
+        options = new HashSet<>();
         switch (args[0]) {
             case "execute":
                 action = EXECUTE;
@@ -44,16 +44,19 @@ public class Arguments {
                 action = PIPELINE;
                 break;
             case "testargs":
-                action=TESTARGS;
+                action = TESTARGS;
                 break;
             case "setapikey":
-                action=SETAPIKEY;
+                action = SETAPIKEY;
                 break;
             case "getapikey":
-                action=GETAPIKEY;
+                action = GETAPIKEY;
                 break;
             case "relaunch":
-                action=RELAUNCH;
+                action = RELAUNCH;
+                break;
+            case "getgateinput":
+                action = GETGATEINPUT;
                 break;
             default:
                 throw new ArgumentException("Option not correct.");
@@ -61,22 +64,19 @@ public class Arguments {
 
         int it = 1;
         while (it < args.length) {
-            if (args[it].length() < 2 || !args[it].substring(0, 1).equals("-")) {
+            String currentArg = args[it];
+            String nextArg = (it + 1) < args.length ? args[it + 1] : null;
 
+            boolean isArgWithoutFlag = currentArg.length() < 2 || !currentArg.substring(0, 1).equals("-");
+
+            if (isArgWithoutFlag) {
                 argsWithoutFlag.add(args[it]);
                 it++;
-            } else if (args[it].substring(0, 2).equals("--") ) {
-                if ((it + 1) < args.length
-                        && !args[it + 1].substring(0, 1).equals("--")) {
-                    argsWithFlag.put(args[it].substring(2), args[it + 1]);
-                    it += 2;
-                } else {
-                    throw new ArgumentException(args[it]+" has no value");
-                }
-            }
-            else if (args[it].substring(0, 1).equals("-") && !args[it].substring(0, 2).equals("--")) {
-
-                options.add(args[it].substring(1));
+            } else if (isFlagArg(currentArg, nextArg)) {
+                argsWithFlag.put(currentArg.substring(2), nextArg);
+                it += 2;
+            } else if (isOption(currentArg)) {
+                options.add(currentArg.substring(1));
                 it += 1;
 
             } else {
@@ -85,6 +85,19 @@ public class Arguments {
             }
         }
 
+    }
+
+    private boolean isFlagArg(String arg, String nextArg) throws ArgumentException {
+
+        if (!arg.startsWith("--")) return false;
+        if (nextArg == null) throw new ArgumentException(arg + " has no value");
+        if (nextArg.startsWith("-")) throw new ArgumentException(arg + " has no value");
+        return true;
+    }
+
+    private boolean isOption(String arg) {
+        if (arg.startsWith("-") || !arg.startsWith("--")) return true;
+        return false;
     }
 
     public Map<String, String> getArgsWithFlag() {
@@ -101,6 +114,10 @@ public class Arguments {
 
     public ArgType getAction() {
         return action;
+    }
+
+    public boolean hasOption (String option) {
+        return options.contains(option);
     }
 
 

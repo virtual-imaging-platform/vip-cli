@@ -8,7 +8,6 @@ import java.util.Map;
 import static java.lang.System.exit;
 
 import fr.insalyon.creatis.vip.cli.control.Arguments;
-import fr.insalyon.creatis.vip.cli.model.ArgumentException;
 import fr.insalyon.creatis.vip.java_client.ApiException;
 import fr.insalyon.creatis.vip.java_client.api.DefaultApi;
 import fr.insalyon.creatis.vip.java_client.model.Execution;
@@ -36,7 +35,7 @@ public class InitAndExecuteAction implements Action<Execution> {
 	//if no directory is needed  (ex. GateLab execution), -nodir option is necessary.
 	private void setExecution()  {
 		Map<String, Object> parameters = new HashMap<>();
-		if (!args.getOptions().contains("nodir")) {
+		if (!args.hasOption("nodir")) {
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd_HHmmss");
 			directoryOnVip = "/vip/Home/" + df.format(new Date());
 			parameters.put("results-directory", directoryOnVip);

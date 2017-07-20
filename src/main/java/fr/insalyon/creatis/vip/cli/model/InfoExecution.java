@@ -18,6 +18,7 @@ public class InfoExecution implements Serializable {
 	private int Id;
 	@Column(name = "ExecutionIdentifier")
 	private String executionIdentifier;
+	private String executionName;
 	@Column(name="PipelineIdentifier")
 	private String pipelineIdentifier;
 	@Column(name = "Status")
@@ -33,22 +34,25 @@ public class InfoExecution implements Serializable {
 
 	}
 
-	public InfoExecution(String executionIdentifier,String pipelineIdentifier, String status, String repersitory, Date startdate) {
-		super();
+	public InfoExecution(String executionIdentifier, String executionName, String pipelineIdentifier, String status, String repersitory, Date startdate) {
 		this.executionIdentifier = executionIdentifier;
-		this.pipelineIdentifier=pipelineIdentifier;
+		this.executionName = executionName;
+		this.pipelineIdentifier = pipelineIdentifier;
 		this.status = status;
 		this.repersitory = repersitory;
 		this.startdate = startdate;
 	}
 
-	
-
 	@Override
 	public String toString() {
-		return "***InfoExecution***\r\n executionIdentifier=" + executionIdentifier + "\r\n pipelineIdentifier="
-				+ pipelineIdentifier + "\r\n status=" + status + "\r\n repersitory=" + repersitory + "\r\n startdate="
-				+ startdate + "";
+		return "InfoExecution{" +
+				"executionIdentifier='" + executionIdentifier + '\'' +
+				", executionName='" + executionName + '\'' +
+				", pipelineIdentifier='" + pipelineIdentifier + '\'' +
+				", status='" + status + '\'' +
+				", repersitory='" + repersitory + '\'' +
+				", startdate=" + startdate +
+				'}';
 	}
 
 	public String getPipelineIdentifier() {
@@ -117,4 +121,12 @@ public class InfoExecution implements Serializable {
 		this.startdate = startdate;
 	}
 
+	public void setExecutionName(String executionName) {
+		this.executionName = executionName;
+	}
+
+	public String getExecutionName() {
+
+		return executionName;
+	}
 }

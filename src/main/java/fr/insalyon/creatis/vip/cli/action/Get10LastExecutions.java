@@ -4,7 +4,6 @@ import fr.insalyon.creatis.vip.java_client.ApiException;
 import fr.insalyon.creatis.vip.java_client.api.DefaultApi;
 import fr.insalyon.creatis.vip.java_client.model.Execution;
 
-import java.lang.reflect.Executable;
 import java.util.ArrayList;
 import java.util.List;
 
