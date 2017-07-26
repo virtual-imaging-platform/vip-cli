@@ -67,15 +67,18 @@ public class InfoExecutionDAO {
 	public InfoExecution getLastExecution() {
 
 		HibernateUtil.openSession();
-		Query query = HibernateUtil.getSession().createQuery("Select e from InfoExecution e Order By Id desc");
+		Query query = HibernateUtil.getSession().createQuery("Select e from InfoExecution e Order By startdate desc");
 		List<InfoExecution> list = query.list();
+		if (list==null) {
+			System.err.println("Data base is empty");
+		}
 		return list.get(0);
 
 	}
 
 	public List<InfoExecution> getAllExecutions() {
 		HibernateUtil.openSession();
-		Query query = HibernateUtil.getSession().createQuery("Select e from InfoExecution e");
+		Query query = HibernateUtil.getSession().createQuery("Select e from InfoExecution e order by startdate desc");
 		List<InfoExecution> res = query.list();
 		HibernateUtil.closeSession();
 		return res;

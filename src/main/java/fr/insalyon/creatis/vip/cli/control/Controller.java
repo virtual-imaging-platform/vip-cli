@@ -26,15 +26,19 @@ import static java.lang.System.exit;
 public class Controller {
     public final static String PROPERTIESPATH = "cli.properties";
     public final static String TRUSTSTOREFILE = "./truststore";
+    public final static String INPUTPREFIX = "/vip/Home";
+    public final static String GATERELEASEPATH="vip://vip.creatis.insa-lyon.fr/vip/GateLab (group)/releases/";
+    public final static String URIPREFIX="vip://vip.creatis.insa-lyon.fr";
 
     public static String apiKeyValue;
-    public static String vipUriPrefix;
+        public static String vipUriPrefix;
     public static String databaseLocation;
     public static int refreshTime;
     public static boolean enableDatabase;
 
     private Arguments arguments;
-    private DefaultApi api;
+    private DefaultApi apiProcessing;
+    private fr.insalyon.creatis.vip.client.data.api.DefaultApi apiData;
     private UtilIO utilIO = UtilIO.getInstance();
     private List<CliEventListener> cliEventListeners;
 
@@ -43,10 +47,10 @@ public class Controller {
     }
 
     private void run(String[] args) {
-
         initializeSslConnection();
         arguments = parseArguments(args);
-        api = readPropertiesSetApi();
+        readPropertiesSetApi();
+
         cliEventListeners = new ArrayList<>();
         if (enableDatabase)
             cliEventListeners.add(new HibernateEventListener());
@@ -76,14 +80,14 @@ public class Controller {
                     doExecutions();
                     break;
                 case RESULT:
-                    GetResultAction getResultAction = new GetResultAction(new CliContext(api,arguments,cliEventListeners));
+                    GetResultAction getResultAction = new GetResultAction(new CliContext(apiProcessing, arguments, cliEventListeners), apiData);
                     utilIO.downloadFile(getResultAction.execute(), getResultAction.getDirectory());
                     break;
                 case DELETE:
                     informListeners(CliEvent.CliEventEnum.EXECUTION_DELETED, null);
                     break;
                 case PIPELINE:
-                    GetPipelineAction getPipelineAction = new GetPipelineAction(api, arguments);
+                    GetPipelineAction getPipelineAction = new GetPipelineAction(apiProcessing, arguments);
                     System.out.println(getPipelineAction.execute());
                     break;
                 case GETAPIKEY:
@@ -94,11 +98,24 @@ public class Controller {
                     setApiKeyAction.execute();
                     break;
                 case RELAUNCH:
-                    RelaunchAction relaunchAction = new RelaunchAction(api, arguments);
+                    RelaunchAction relaunchAction = new RelaunchAction(new CliContext(apiProcessing, arguments, cliEventListeners));
                     relaunchAction.execute();
                 case GETGATEINPUT:
                     doGetGateInput();
                     break;
+                case UPLOAD:
+                    try {
+                        UploadAction uploadAction = new UploadAction(apiData, arguments);
+                        uploadAction.execute();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case GETGATERELEASE:
+                    GetGateReleaseAction getGateReleaseAction=new GetGateReleaseAction(apiData,arguments);
+                    getGateReleaseAction.execute();
+                    break;
+
                 //this case is used to test args
                 case TESTARGS:
                     System.out.println("**args without flags are**");
@@ -118,7 +135,10 @@ public class Controller {
 
         } catch (ApiException ae) {
             System.err.println(ae.getMessage());
-        } finally {
+        } catch (fr.insalyon.creatis.vip.client.data.ApiException dae) {
+            System.err.println(dae.getMessage());
+        }
+        finally {
             informListeners(CliEvent.CliEventEnum.TERMINATE, null);
         }
 
@@ -145,10 +165,9 @@ public class Controller {
         return arguments;
     }
 
-    private DefaultApi readPropertiesSetApi() {
+    private void readPropertiesSetApi() {
         //read from properties
         PropertyCli property = null;
-        DefaultApi api = null;
         try {
             property = utilIO.getPropertyCli(new File(PROPERTIESPATH));
             apiKeyValue = property.getApiKey();
@@ -170,34 +189,39 @@ public class Controller {
             client.setConnectTimeout(3000);
             client.setBasePath(vipUriPrefix);
             client.setApiKey(apiKeyValue);
-            // client.setConnectTimeout();
-            api = new DefaultApi(client);
+            apiProcessing = new DefaultApi(client);
+
+            //TODO: illiminate the redundance of DefaultApi
+            fr.insalyon.creatis.vip.client.data.ApiClient client1=new fr.insalyon.creatis.vip.client.data.ApiClient();
+            client1.setConnectTimeout(3000);
+            client1.setBasePath(vipUriPrefix);
+            client1.setApiKey(apiKeyValue);
+            apiData=new fr.insalyon.creatis.vip.client.data.api.DefaultApi(client1);
         } catch (PropertyException e) {
             System.out.println(e.getMessage());
             exit(0);
         }
-        return api;
     }
 
     private void doExecute() throws ApiException {
         //TODO: delete automatically too old executions in the database after launched an execution.
         if (arguments.getArgsWithFlag().get("results") == null) {
-            InitAndExecuteAction initAndExecuteAction = new InitAndExecuteAction(api, arguments);
+            InitAndExecuteAction initAndExecuteAction = new InitAndExecuteAction(apiProcessing, arguments);
             Execution execution = initAndExecuteAction.execute();
             utilIO.printInitExecuteResult(execution);
             informListeners(CliEvent.CliEventEnum.EXECUTION_CREATED, execution);
         } else {
-            DoAllAction doAllAction = new DoAllAction(new CliContext(api,arguments,cliEventListeners));
-            try {
-                utilIO.downloadFile(doAllAction.execute(), doAllAction.getDirectory());
-            } catch (ApiException e) {
-                System.err.println(e.getMessage());
-            }
+            DoAllAction doAllAction = new DoAllAction(new CliContext(apiProcessing, arguments, cliEventListeners));
+            //try {
+                //utilIO.downloadFile(doAllAction.execute(), doAllAction.getDirectory());
+            //} catch (ApiException e) {
+              //  System.err.println(e.getMessage());
+            //}
         }
     }
 
     private void doStatus() throws ApiException {
-        GetExecutionAction getExecutionAction = new GetExecutionAction(new CliContext(api,arguments,cliEventListeners));
+        GetExecutionAction getExecutionAction = new GetExecutionAction(new CliContext(apiProcessing, arguments, cliEventListeners));
         Execution execution = getExecutionAction.execute();
         utilIO.printExecutionStatus(execution);
         informListeners(CliEvent.CliEventEnum.EXECUTION_UPDATED, execution);
@@ -215,13 +239,13 @@ public class Controller {
 
         } else {
 
-            Get10LastExecutions get10LastExecutions = new Get10LastExecutions(api);
+            Get10LastExecutions get10LastExecutions = new Get10LastExecutions(apiProcessing);
             utilIO.printListExecutions(get10LastExecutions.execute(), arguments.hasOption("formatted"));
         }
     }
 
-    private void doGetGateInput() throws ApiException {
-        GetGateInputAction getGateInputAction = new GetGateInputAction(api, arguments);
+    private void doGetGateInput() throws ApiException, fr.insalyon.creatis.vip.client.data.ApiException {
+        GetGateInputAction getGateInputAction = new GetGateInputAction(new CliContext(apiProcessing, arguments, cliEventListeners), apiData);
         try {
             utilIO.printGateInputs(getGateInputAction.execute());
         } catch (GetGateInputException | IOException e) {
@@ -261,6 +285,7 @@ public class Controller {
             this.arguments = arguments;
             this.cliEventListenerList = cliEventListenerList;
         }
+
         public CliEventListener getListenerWithStorage() {
             CliEventListener cliEventListenerWithStorage = null;
             for (CliEventListener cliEventListener : cliEventListeners) {
@@ -274,7 +299,6 @@ public class Controller {
             }
             return cliEventListenerWithStorage;
         }
-
 
 
     }

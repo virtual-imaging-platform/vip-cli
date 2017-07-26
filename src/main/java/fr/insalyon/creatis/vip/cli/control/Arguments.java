@@ -58,6 +58,12 @@ public class Arguments {
             case "getgateinput":
                 action = GETGATEINPUT;
                 break;
+            case "upload":
+                action=UPLOAD;
+                break;
+            case "getgaterelease":
+                action=GETGATERELEASE;
+                break;
             default:
                 throw new ArgumentException("Option not correct.");
         }

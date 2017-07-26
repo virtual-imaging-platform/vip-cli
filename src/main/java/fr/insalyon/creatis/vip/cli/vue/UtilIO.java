@@ -5,6 +5,7 @@ import static java.lang.System.exit;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import fr.insalyon.creatis.vip.cli.control.Controller;
@@ -91,19 +92,22 @@ public class UtilIO {
      * @param listExecution
      */
     public void printListInfoExecutions(List<InfoExecution> listExecution, boolean formatted) {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         if (formatted) {
+            StringBuilder toPrint = new StringBuilder();
             if (listExecution != null) {
-                StringBuilder toPrint = new StringBuilder();
-                // TODO : check new line character on windows
+
+                // TODO : check new line character on windows /Solution: use System.lineSperator() to be adapted to all OS including Windows
                 for (InfoExecution e : listExecution) {
                     toPrint.append(e.getExecutionName()).append(",")
                             .append(e.getPipelineIdentifier()).append(",")
-                            .append(e.getStartdate()).append(",")
+                            .append(df.format(e.getStartdate())).append(",")
                             .append(e.getStatus()).append(",")
                             .append(e.getExecutionIdentifier()).append("&&&");
                 }
-                System.out.print(toPrint.toString());
+                System.out.println(toPrint.toString());
             }
+
         } else {
             if (listExecution != null) {
                 StringBuilder toPrint = new StringBuilder();
@@ -112,7 +116,7 @@ public class UtilIO {
                 for (InfoExecution e : listExecution) {
                     toPrint.append("Execution Name:   " + e.getExecutionName()).append(System.lineSeparator())
                             .append("Pipeline id:      " + e.getPipelineIdentifier()).append(System.lineSeparator())
-                            .append("Start date:       " + e.getStartdate()).append(System.lineSeparator())
+                            .append("Start date:       " + df.format(e.getStartdate())).append(System.lineSeparator())
                             .append("Status:           " + e.getStatus()).append(System.lineSeparator())
                             .append("Execution id:     " + e.getExecutionIdentifier()).append(System.lineSeparator())
                             .append("-------------------").append(System.lineSeparator());
@@ -127,7 +131,7 @@ public class UtilIO {
         printListInfoExecutions(InfoExecutionTransform.executionListToInfoList(executionList), formatted);
     }
 
-
+    /*
     public void downloadFile(List<String> urls, String dest) {
 
         try {
@@ -163,6 +167,33 @@ public class UtilIO {
         }
 
     }
+     **/
+    public void downloadFile(Map<String, String> results, String dest) {
+        String[] dests = dest.split(File.separator);
+        String tmp = "";
+        for (int it = 0; it < dests.length; it++) {
+            if (!new File(tmp += File.separator + dests[it]).exists()) {
+                System.out.println("Trying to create dir " + tmp);
+                new File(tmp).mkdir();
+            }
+        }
+
+        results.forEach((fileName, encodedContent) -> {
+                    byte[] decoded = Base64.getDecoder().decode(encodedContent);
+                    File file = new File(dest + File.separator + fileName);
+                    try {
+                        file.createNewFile();
+                        OutputStream outputStream = new FileOutputStream(file);
+                        outputStream.write(decoded);
+                        outputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+        );
+    }
 
     public void printGateInputs(Map<String, Object> inputs) {
         StringBuilder sb = new StringBuilder();
@@ -181,4 +212,25 @@ public class UtilIO {
          **/
     }
 
+    public static String getStringFromInputStream(InputStream is) throws IOException {
+/**
+ byte b[] = new byte[is.available()];
+ is.read(b, 0, b.length);
+ is.close();
+ return new String(b);
+ /**
+ Pattern p = Pattern.compile("\\s*|\t|\r|\n");
+ Matcher m = p.matcher(new String(b));
+
+ return m.replaceAll("");
+ **/
+        BufferedReader br = null;
+        StringBuilder sb = new StringBuilder();
+        String line;
+        br = new BufferedReader(new InputStreamReader(is));
+        while ((line = br.readLine()) != null) {
+            sb.append(line);
+        }
+        return new String(sb);
+    }
 }
